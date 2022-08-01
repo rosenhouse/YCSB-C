@@ -1,0 +1,41 @@
+syntax = "proto3";
+
+option go_package = "kvaas/kvs";
+
+package kvs;
+
+service KVS {
+    rpc Put(stream PutRequest) returns (stream PutResponse) {}
+
+    rpc Get(stream GetRequest) returns (stream GetResponse) {}
+}
+
+message PutRequest {
+    // optional, to simplify correlating request and response
+    int32 nonce = 1;
+
+    bytes key = 2;
+    bytes value = 3;
+}
+
+// acknolwedges a successful put
+message PutResponse {
+    // Matches nonce provided in request
+    int32 nonce = 1;
+}
+
+message GetRequest {
+    // optional, to simplify correlating request and response
+    int32 nonce = 1;
+
+    bytes key = 2;
+}
+
+message GetResponse {
+    // Matches nonce provided in request
+    int32 nonce = 1;
+
+    bool found = 2;
+
+    bytes value = 3;
+}
