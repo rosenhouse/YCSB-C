@@ -29,7 +29,6 @@ clean:
 export PKG_CONFIG_PATH = /home/linuxbrew/.linuxbrew/lib/pkgconfig
 
 CPPFLAGS += `pkg-config --cflags protobuf grpc++`
-CXXFLAGS += -std=c++14
 LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -pthread\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
@@ -105,3 +104,8 @@ endif
 ifneq ($(SYSTEM_OK),true)
 	@false
 endif
+
+# to support clangd: https://clangd.llvm.org/installation.html#compile_flagstxt
+.PHONY: compile_flags.txt
+compile_flags.txt:
+	echo "$(CFLAGS) $(CPPFLAGS)" | tr ' ' "\n" > compile_flags.txt
