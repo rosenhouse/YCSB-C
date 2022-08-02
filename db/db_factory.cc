@@ -15,6 +15,7 @@
 #include "db/tbb_rand_db.h"
 #include "db/tbb_scan_db.h"
 #include "db/splinter_db.h"
+#include "db/grpc_db.h"
 #include "db/rocks_db.h"
 
 using namespace std;
@@ -35,6 +36,8 @@ DB* DBFactory::CreateDB(utils::Properties &props, bool preloaded) {
     return new RocksDB(props, preloaded);
   } else if (props["dbname"] == "splinterdb") {
     return new SplinterDB(props, preloaded);
+  } else if (props["dbname"] == "grpc") {
+    return new GrpcDB(props, preloaded);
   } else if (props["dbname"] == "tbb_rand") {
     assert(!preloaded);
     return new TbbRandDB;

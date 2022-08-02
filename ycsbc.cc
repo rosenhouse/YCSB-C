@@ -63,6 +63,11 @@ std::map<string, string> default_props = {
   {"splinterdb.reclaim_threshold", "0"},
 
   {"rocksdb.database_filename", "rocksdb.db"},
+
+  //
+  // grpc config defaults
+  //
+  {"grpc.addr", "localhost:50051"},
 };
 
 
