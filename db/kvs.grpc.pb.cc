@@ -28,45 +28,45 @@ static const char* KVS_method_names[] = {
 
 std::unique_ptr< KVS::Stub> KVS::NewStub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options) {
   (void)options;
-  std::unique_ptr< KVS::Stub> stub(new KVS::Stub(channel, options));
+  std::unique_ptr< KVS::Stub> stub(new KVS::Stub(channel));
   return stub;
 }
 
-KVS::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options)
-  : channel_(channel), rpcmethod_Put_(KVS_method_names[0], options.suffix_for_stats(),::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
-  , rpcmethod_Get_(KVS_method_names[1], options.suffix_for_stats(),::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
+KVS::Stub::Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel)
+  : channel_(channel), rpcmethod_Put_(KVS_method_names[0], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
+  , rpcmethod_Get_(KVS_method_names[1], ::grpc::internal::RpcMethod::BIDI_STREAMING, channel)
   {}
 
 ::grpc::ClientReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>* KVS::Stub::PutRaw(::grpc::ClientContext* context) {
-  return ::grpc::internal::ClientReaderWriterFactory< ::kvs::PutRequest, ::kvs::PutResponse>::Create(channel_.get(), rpcmethod_Put_, context);
+  return ::grpc_impl::internal::ClientReaderWriterFactory< ::kvs::PutRequest, ::kvs::PutResponse>::Create(channel_.get(), rpcmethod_Put_, context);
 }
 
-void KVS::Stub::async::Put(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::kvs::PutRequest,::kvs::PutResponse>* reactor) {
-  ::grpc::internal::ClientCallbackReaderWriterFactory< ::kvs::PutRequest,::kvs::PutResponse>::Create(stub_->channel_.get(), stub_->rpcmethod_Put_, context, reactor);
+void KVS::Stub::experimental_async::Put(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::kvs::PutRequest,::kvs::PutResponse>* reactor) {
+  ::grpc_impl::internal::ClientCallbackReaderWriterFactory< ::kvs::PutRequest,::kvs::PutResponse>::Create(stub_->channel_.get(), stub_->rpcmethod_Put_, context, reactor);
 }
 
 ::grpc::ClientAsyncReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>* KVS::Stub::AsyncPutRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::kvs::PutRequest, ::kvs::PutResponse>::Create(channel_.get(), cq, rpcmethod_Put_, context, true, tag);
+  return ::grpc_impl::internal::ClientAsyncReaderWriterFactory< ::kvs::PutRequest, ::kvs::PutResponse>::Create(channel_.get(), cq, rpcmethod_Put_, context, true, tag);
 }
 
 ::grpc::ClientAsyncReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>* KVS::Stub::PrepareAsyncPutRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::kvs::PutRequest, ::kvs::PutResponse>::Create(channel_.get(), cq, rpcmethod_Put_, context, false, nullptr);
+  return ::grpc_impl::internal::ClientAsyncReaderWriterFactory< ::kvs::PutRequest, ::kvs::PutResponse>::Create(channel_.get(), cq, rpcmethod_Put_, context, false, nullptr);
 }
 
 ::grpc::ClientReaderWriter< ::kvs::GetRequest, ::kvs::GetResponse>* KVS::Stub::GetRaw(::grpc::ClientContext* context) {
-  return ::grpc::internal::ClientReaderWriterFactory< ::kvs::GetRequest, ::kvs::GetResponse>::Create(channel_.get(), rpcmethod_Get_, context);
+  return ::grpc_impl::internal::ClientReaderWriterFactory< ::kvs::GetRequest, ::kvs::GetResponse>::Create(channel_.get(), rpcmethod_Get_, context);
 }
 
-void KVS::Stub::async::Get(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::kvs::GetRequest,::kvs::GetResponse>* reactor) {
-  ::grpc::internal::ClientCallbackReaderWriterFactory< ::kvs::GetRequest,::kvs::GetResponse>::Create(stub_->channel_.get(), stub_->rpcmethod_Get_, context, reactor);
+void KVS::Stub::experimental_async::Get(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::kvs::GetRequest,::kvs::GetResponse>* reactor) {
+  ::grpc_impl::internal::ClientCallbackReaderWriterFactory< ::kvs::GetRequest,::kvs::GetResponse>::Create(stub_->channel_.get(), stub_->rpcmethod_Get_, context, reactor);
 }
 
 ::grpc::ClientAsyncReaderWriter< ::kvs::GetRequest, ::kvs::GetResponse>* KVS::Stub::AsyncGetRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) {
-  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::kvs::GetRequest, ::kvs::GetResponse>::Create(channel_.get(), cq, rpcmethod_Get_, context, true, tag);
+  return ::grpc_impl::internal::ClientAsyncReaderWriterFactory< ::kvs::GetRequest, ::kvs::GetResponse>::Create(channel_.get(), cq, rpcmethod_Get_, context, true, tag);
 }
 
 ::grpc::ClientAsyncReaderWriter< ::kvs::GetRequest, ::kvs::GetResponse>* KVS::Stub::PrepareAsyncGetRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
-  return ::grpc::internal::ClientAsyncReaderWriterFactory< ::kvs::GetRequest, ::kvs::GetResponse>::Create(channel_.get(), cq, rpcmethod_Get_, context, false, nullptr);
+  return ::grpc_impl::internal::ClientAsyncReaderWriterFactory< ::kvs::GetRequest, ::kvs::GetResponse>::Create(channel_.get(), cq, rpcmethod_Get_, context, false, nullptr);
 }
 
 KVS::Service::Service() {
@@ -75,8 +75,8 @@ KVS::Service::Service() {
       ::grpc::internal::RpcMethod::BIDI_STREAMING,
       new ::grpc::internal::BidiStreamingHandler< KVS::Service, ::kvs::PutRequest, ::kvs::PutResponse>(
           [](KVS::Service* service,
-             ::grpc::ServerContext* ctx,
-             ::grpc::ServerReaderWriter<::kvs::PutResponse,
+             ::grpc_impl::ServerContext* ctx,
+             ::grpc_impl::ServerReaderWriter<::kvs::PutResponse,
              ::kvs::PutRequest>* stream) {
                return service->Put(ctx, stream);
              }, this)));
@@ -85,8 +85,8 @@ KVS::Service::Service() {
       ::grpc::internal::RpcMethod::BIDI_STREAMING,
       new ::grpc::internal::BidiStreamingHandler< KVS::Service, ::kvs::GetRequest, ::kvs::GetResponse>(
           [](KVS::Service* service,
-             ::grpc::ServerContext* ctx,
-             ::grpc::ServerReaderWriter<::kvs::GetResponse,
+             ::grpc_impl::ServerContext* ctx,
+             ::grpc_impl::ServerReaderWriter<::kvs::GetResponse,
              ::kvs::GetRequest>* stream) {
                return service->Get(ctx, stream);
              }, this)));

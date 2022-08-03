@@ -7,6 +7,7 @@
 #include "kvs.pb.h"
 
 #include <functional>
+#include <grpc/impl/codegen/port_platform.h>
 #include <grpcpp/impl/codegen/async_generic_service.h>
 #include <grpcpp/impl/codegen/async_stream.h>
 #include <grpcpp/impl/codegen/async_unary_call.h>
@@ -53,16 +54,28 @@ class KVS final {
     std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::kvs::GetRequest, ::kvs::GetResponse>> PrepareAsyncGet(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderWriterInterface< ::kvs::GetRequest, ::kvs::GetResponse>>(PrepareAsyncGetRaw(context, cq));
     }
-    class async_interface {
+    class experimental_async_interface {
      public:
-      virtual ~async_interface() {}
+      virtual ~experimental_async_interface() {}
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Put(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::kvs::PutRequest,::kvs::PutResponse>* reactor) = 0;
+      #else
+      virtual void Put(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::kvs::PutRequest,::kvs::PutResponse>* reactor) = 0;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       virtual void Get(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::kvs::GetRequest,::kvs::GetResponse>* reactor) = 0;
+      #else
+      virtual void Get(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::kvs::GetRequest,::kvs::GetResponse>* reactor) = 0;
+      #endif
     };
-    typedef class async_interface experimental_async_interface;
-    virtual class async_interface* async() { return nullptr; }
-    class async_interface* experimental_async() { return async(); }
-   private:
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    typedef class experimental_async_interface async_interface;
+    #endif
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+    async_interface* async() { return experimental_async(); }
+    #endif
+    virtual class experimental_async_interface* experimental_async() { return nullptr; }
+  private:
     virtual ::grpc::ClientReaderWriterInterface< ::kvs::PutRequest, ::kvs::PutResponse>* PutRaw(::grpc::ClientContext* context) = 0;
     virtual ::grpc::ClientAsyncReaderWriterInterface< ::kvs::PutRequest, ::kvs::PutResponse>* AsyncPutRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) = 0;
     virtual ::grpc::ClientAsyncReaderWriterInterface< ::kvs::PutRequest, ::kvs::PutResponse>* PrepareAsyncPutRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) = 0;
@@ -72,7 +85,7 @@ class KVS final {
   };
   class Stub final : public StubInterface {
    public:
-    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel, const ::grpc::StubOptions& options = ::grpc::StubOptions());
+    Stub(const std::shared_ptr< ::grpc::ChannelInterface>& channel);
     std::unique_ptr< ::grpc::ClientReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>> Put(::grpc::ClientContext* context) {
       return std::unique_ptr< ::grpc::ClientReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>>(PutRaw(context));
     }
@@ -91,22 +104,30 @@ class KVS final {
     std::unique_ptr<  ::grpc::ClientAsyncReaderWriter< ::kvs::GetRequest, ::kvs::GetResponse>> PrepareAsyncGet(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) {
       return std::unique_ptr< ::grpc::ClientAsyncReaderWriter< ::kvs::GetRequest, ::kvs::GetResponse>>(PrepareAsyncGetRaw(context, cq));
     }
-    class async final :
-      public StubInterface::async_interface {
+    class experimental_async final :
+      public StubInterface::experimental_async_interface {
      public:
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Put(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::kvs::PutRequest,::kvs::PutResponse>* reactor) override;
+      #else
+      void Put(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::kvs::PutRequest,::kvs::PutResponse>* reactor) override;
+      #endif
+      #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
       void Get(::grpc::ClientContext* context, ::grpc::ClientBidiReactor< ::kvs::GetRequest,::kvs::GetResponse>* reactor) override;
+      #else
+      void Get(::grpc::ClientContext* context, ::grpc::experimental::ClientBidiReactor< ::kvs::GetRequest,::kvs::GetResponse>* reactor) override;
+      #endif
      private:
       friend class Stub;
-      explicit async(Stub* stub): stub_(stub) { }
+      explicit experimental_async(Stub* stub): stub_(stub) { }
       Stub* stub() { return stub_; }
       Stub* stub_;
     };
-    class async* async() override { return &async_stub_; }
+    class experimental_async_interface* experimental_async() override { return &async_stub_; }
 
    private:
     std::shared_ptr< ::grpc::ChannelInterface> channel_;
-    class async async_stub_{this};
+    class experimental_async async_stub_{this};
     ::grpc::ClientReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>* PutRaw(::grpc::ClientContext* context) override;
     ::grpc::ClientAsyncReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>* AsyncPutRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq, void* tag) override;
     ::grpc::ClientAsyncReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>* PrepareAsyncPutRaw(::grpc::ClientContext* context, ::grpc::CompletionQueue* cq) override;
@@ -167,17 +188,27 @@ class KVS final {
   };
   typedef WithAsyncMethod_Put<WithAsyncMethod_Get<Service > > AsyncService;
   template <class BaseClass>
-  class WithCallbackMethod_Put : public BaseClass {
+  class ExperimentalWithCallbackMethod_Put : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithCallbackMethod_Put() {
-      ::grpc::Service::MarkMethodCallback(0,
-          new ::grpc::internal::CallbackBidiHandler< ::kvs::PutRequest, ::kvs::PutResponse>(
+    ExperimentalWithCallbackMethod_Put() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(0,
+          new ::grpc_impl::internal::CallbackBidiHandler< ::kvs::PutRequest, ::kvs::PutResponse>(
             [this](
-                   ::grpc::CallbackServerContext* context) { return this->Put(context); }));
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context) { return this->Put(context); }));
     }
-    ~WithCallbackMethod_Put() override {
+    ~ExperimentalWithCallbackMethod_Put() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -185,22 +216,37 @@ class KVS final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerBidiReactor< ::kvs::PutRequest, ::kvs::PutResponse>* Put(
       ::grpc::CallbackServerContext* /*context*/)
+    #else
+    virtual ::grpc::experimental::ServerBidiReactor< ::kvs::PutRequest, ::kvs::PutResponse>* Put(
+      ::grpc::experimental::CallbackServerContext* /*context*/)
+    #endif
       { return nullptr; }
   };
   template <class BaseClass>
-  class WithCallbackMethod_Get : public BaseClass {
+  class ExperimentalWithCallbackMethod_Get : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithCallbackMethod_Get() {
-      ::grpc::Service::MarkMethodCallback(1,
-          new ::grpc::internal::CallbackBidiHandler< ::kvs::GetRequest, ::kvs::GetResponse>(
+    ExperimentalWithCallbackMethod_Get() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodCallback(1,
+          new ::grpc_impl::internal::CallbackBidiHandler< ::kvs::GetRequest, ::kvs::GetResponse>(
             [this](
-                   ::grpc::CallbackServerContext* context) { return this->Get(context); }));
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context) { return this->Get(context); }));
     }
-    ~WithCallbackMethod_Get() override {
+    ~ExperimentalWithCallbackMethod_Get() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -208,12 +254,20 @@ class KVS final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerBidiReactor< ::kvs::GetRequest, ::kvs::GetResponse>* Get(
       ::grpc::CallbackServerContext* /*context*/)
+    #else
+    virtual ::grpc::experimental::ServerBidiReactor< ::kvs::GetRequest, ::kvs::GetResponse>* Get(
+      ::grpc::experimental::CallbackServerContext* /*context*/)
+    #endif
       { return nullptr; }
   };
-  typedef WithCallbackMethod_Put<WithCallbackMethod_Get<Service > > CallbackService;
-  typedef CallbackService ExperimentalCallbackService;
+  #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+  typedef ExperimentalWithCallbackMethod_Put<ExperimentalWithCallbackMethod_Get<Service > > CallbackService;
+  #endif
+
+  typedef ExperimentalWithCallbackMethod_Put<ExperimentalWithCallbackMethod_Get<Service > > ExperimentalCallbackService;
   template <class BaseClass>
   class WithGenericMethod_Put : public BaseClass {
    private:
@@ -289,17 +343,27 @@ class KVS final {
     }
   };
   template <class BaseClass>
-  class WithRawCallbackMethod_Put : public BaseClass {
+  class ExperimentalWithRawCallbackMethod_Put : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawCallbackMethod_Put() {
-      ::grpc::Service::MarkMethodRawCallback(0,
-          new ::grpc::internal::CallbackBidiHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    ExperimentalWithRawCallbackMethod_Put() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(0,
+          new ::grpc_impl::internal::CallbackBidiHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-                   ::grpc::CallbackServerContext* context) { return this->Put(context); }));
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context) { return this->Put(context); }));
     }
-    ~WithRawCallbackMethod_Put() override {
+    ~ExperimentalWithRawCallbackMethod_Put() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -307,22 +371,37 @@ class KVS final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Put(
       ::grpc::CallbackServerContext* /*context*/)
+    #else
+    virtual ::grpc::experimental::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Put(
+      ::grpc::experimental::CallbackServerContext* /*context*/)
+    #endif
       { return nullptr; }
   };
   template <class BaseClass>
-  class WithRawCallbackMethod_Get : public BaseClass {
+  class ExperimentalWithRawCallbackMethod_Get : public BaseClass {
    private:
     void BaseClassMustBeDerivedFromService(const Service* /*service*/) {}
    public:
-    WithRawCallbackMethod_Get() {
-      ::grpc::Service::MarkMethodRawCallback(1,
-          new ::grpc::internal::CallbackBidiHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
+    ExperimentalWithRawCallbackMethod_Get() {
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+      ::grpc::Service::
+    #else
+      ::grpc::Service::experimental().
+    #endif
+        MarkMethodRawCallback(1,
+          new ::grpc_impl::internal::CallbackBidiHandler< ::grpc::ByteBuffer, ::grpc::ByteBuffer>(
             [this](
-                   ::grpc::CallbackServerContext* context) { return this->Get(context); }));
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
+                   ::grpc::CallbackServerContext*
+    #else
+                   ::grpc::experimental::CallbackServerContext*
+    #endif
+                     context) { return this->Get(context); }));
     }
-    ~WithRawCallbackMethod_Get() override {
+    ~ExperimentalWithRawCallbackMethod_Get() override {
       BaseClassMustBeDerivedFromService(this);
     }
     // disable synchronous version of this method
@@ -330,8 +409,13 @@ class KVS final {
       abort();
       return ::grpc::Status(::grpc::StatusCode::UNIMPLEMENTED, "");
     }
+    #ifdef GRPC_CALLBACK_API_NONEXPERIMENTAL
     virtual ::grpc::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Get(
       ::grpc::CallbackServerContext* /*context*/)
+    #else
+    virtual ::grpc::experimental::ServerBidiReactor< ::grpc::ByteBuffer, ::grpc::ByteBuffer>* Get(
+      ::grpc::experimental::CallbackServerContext* /*context*/)
+    #endif
       { return nullptr; }
   };
   typedef Service StreamedUnaryService;

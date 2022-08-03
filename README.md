@@ -11,7 +11,7 @@
 Install SplinterDB (https://github.com/vmware/splinterdb)
 
 ```sh
-$ sudo apt-get install libtbb-dev librocksdb-dev libhiredis-dev
+$ sudo apt-get install libtbb-dev librocksdb-dev libhiredis-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
 $ make
 ```
 

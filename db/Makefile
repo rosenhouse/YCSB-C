@@ -1,5 +1,3 @@
-export PKG_CONFIG_PATH = /home/linuxbrew/.linuxbrew/lib/pkgconfig
-
 PROTOS_PATH = .
 CC=g++
 CFLAGS=-std=c++17 -c -g -O3 -Wall -fgnu-tm -D SPLINTERDB_PLATFORM_DIR=platform_linux
@@ -18,8 +16,10 @@ all: $(SOURCES) $(OBJECTS)
 
 clean:
 	$(RM) $(OBJECTS)
+	rm -f *.pb.cc *.pb.h
 
 grpc_db.o: kvs.pb.o kvs.grpc.pb.o
+db_factory.o: grpc_db.o
 
 # gRPC stuff below
 

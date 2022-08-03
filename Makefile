@@ -2,14 +2,14 @@ CC=g++
 CFLAGS=-std=c++17 -g -Wall -pthread -I./
 LDFLAGS= -lpthread -ltbb -lhiredis -lsplinterdb -lrocksdb -lprotobuf -lgrpc
 SUBDIRS=core db
-SUBCPPSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc)
+GRPC_GENERATED=db/kvs.pb.cc db/kvs.grpc.pb.cc
+SUBCPPSRCS=$(wildcard core/*.cc) $(wildcard db/*.cc) $(GRPC_GENERATED)
 SUBCSRCS=$(wildcard core/*.c) $(wildcard db/*.c)
 OBJECTS=$(SUBCPPSRCS:.cc=.o) $(SUBCSRCS:.c=.o)
 EXEC=ycsbc
 
 # for gRPC
-export PKG_CONFIG_PATH = /home/linuxbrew/.linuxbrew/lib/pkgconfig
-LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++ re2 libcares`\
+LDFLAGS += -L/usr/local/lib `pkg-config --libs protobuf grpc++`\
            -pthread\
            -Wl,--no-as-needed -lgrpc++_reflection -Wl,--as-needed\
            -ldl
