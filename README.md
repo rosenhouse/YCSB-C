@@ -8,10 +8,11 @@
 
 ## Quick Start for Debian-based systems
 
-Install SplinterDB (https://github.com/vmware/splinterdb)
+First install SplinterDB according to its docs: https://github.com/vmware/splinterdb
 
+Then install additional dependencies for this program, and build it:
 ```sh
-$ sudo apt-get install libtbb-dev librocksdb-dev libhiredis-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc
+$ sudo apt-get install libtbb-dev librocksdb-dev libhiredis-dev libgrpc++-dev libprotobuf-dev protobuf-compiler-grpc libfmt-dev
 $ make
 ```
 

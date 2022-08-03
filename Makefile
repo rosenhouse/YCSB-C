@@ -32,7 +32,7 @@ clean:
 
 .PHONY: $(SUBDIRS) $(EXEC)
 
+# to support clangd: https://clangd.llvm.org/installation.html#compile_flagstxt
 .PHONY: compile_flags.txt
 compile_flags.txt:
-	$(MAKE) -C db compile_flags.txt; \
-	cp -p db/compile_flags.txt .
+	$(MAKE) -C db compile_flags.txt; mv db/compile_flags.txt .

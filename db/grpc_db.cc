@@ -13,6 +13,7 @@
 #include <grpcpp/client_context.h>
 #include <grpcpp/create_channel.h>
 #include <grpcpp/security/credentials.h>
+
 #include "grpc_db.h"
 
 using std::string;
@@ -22,6 +23,7 @@ namespace ycsbc {
 
 GrpcDB::GrpcDB(utils::Properties &props, bool preloaded) {
   this->addr = props.GetProperty("grpc.addr");
+  std::cerr << "# Will connect to gRPC server at " << this->addr << std::endl;
 }
 
 // used to retreive the thread-exclusive GrpcClient for a given GrpcDB

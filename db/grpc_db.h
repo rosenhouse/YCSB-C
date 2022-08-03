@@ -9,8 +9,8 @@
 
 #include <iostream>
 #include <string>
-#include "core/properties.h"
 
+#include "core/properties.h"
 #include "core/db.h"
 #include "kvs.grpc.pb.h"
 

@@ -1,6 +1,6 @@
 PROTOS_PATH = .
 CC=g++
-CFLAGS=-std=c++17 -c -g -O3 -Wall -fgnu-tm -D SPLINTERDB_PLATFORM_DIR=platform_linux
+CFLAGS=-std=c++17 -c -g -O3 -Wall -D SPLINTERDB_PLATFORM_DIR=platform_linux
 CFLAGS += `pkg-config --cflags protobuf grpc++`
 PROTOC = protoc
 GRPC_CPP_PLUGIN = grpc_cpp_plugin
@@ -34,7 +34,7 @@ kvs.pb.cc: kvs.proto
 # to support clangd: https://clangd.llvm.org/installation.html#compile_flagstxt
 .PHONY: compile_flags.txt
 compile_flags.txt:
-	echo "$(CFLAGS) $(CPPFLAGS)" | tr ' ' "\n" > compile_flags.txt
+	echo "clang++ -I./ $(CFLAGS) $(CPPFLAGS)" | tr ' ' "\n" > compile_flags.txt
 
 
 # The following is to test your system and ensure a smoother experience.
