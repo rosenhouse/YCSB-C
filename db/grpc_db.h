@@ -16,10 +16,17 @@
 
 namespace ycsbc {
 
+class GrpcClient {
+  public:
+    GrpcClient(std::string& addr);
+
+  private:
+    std::unique_ptr<kvs::KVS::Stub> stub;
+};
+
 class GrpcDB : public DB {
 public:
   GrpcDB(utils::Properties &props, bool preloaded);
-  ~GrpcDB();
 
   void Init();
   void Close();
@@ -41,12 +48,15 @@ public:
   int Delete(const std::string &table, const std::string &key);
 
 private:
-  std::string server_address;
-  std::atomic_int thread_counter;
-  std::map<int, std::unique_ptr<kvs::KVS::Stub>> clients_map;
-};
+  // TCP address of the gRPC server to connect to, e.g. localhost:50051
+  std::string addr;
 
-static thread_local int thread_id = 0;
+  // count of how many threads have been Init(), used to assign thread_local thread_id
+  std::atomic_int thread_counter;
+
+  // associate thread_id to a gRPC client dedicated to that thread
+  std::map<int, std::unique_ptr<GrpcClient>> clients_map;
+};
 
 } // ycsbc
 

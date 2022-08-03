@@ -21,16 +21,16 @@ using std::vector;
 namespace ycsbc {
 
 GrpcDB::GrpcDB(utils::Properties &props, bool preloaded) {
-  server_address = props.GetProperty("grpc.addr");
+  this->addr = props.GetProperty("grpc.addr");
 }
 
-GrpcDB::~GrpcDB() { }
+// used to retreive the thread-exclusive GrpcClient for a given GrpcDB
+static thread_local int thread_id = 0;
 
 void GrpcDB::Init()
 {
   thread_id = this->thread_counter++;
-  auto channel = grpc::CreateChannel(server_address, grpc::InsecureChannelCredentials());
-  this->clients_map[thread_id] = kvs::KVS::NewStub(channel);
+  this->clients_map[thread_id] = std::make_unique<GrpcClient>(GrpcClient(addr));
 }
 
 void GrpcDB::Close()
@@ -73,6 +73,12 @@ int GrpcDB::Insert(const string &table, const string &key, vector<KVPair> &value
 int GrpcDB::Delete(const string &table, const string &key) {
 
   return DB::kOK;
+}
+
+
+GrpcClient::GrpcClient(std::string& addr) {
+    auto channel = grpc::CreateChannel(addr, grpc::InsecureChannelCredentials());
+    this->stub = kvs::KVS::NewStub(channel);
 }
 
 } // ycsbc
