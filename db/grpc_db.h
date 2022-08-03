@@ -20,8 +20,18 @@ class GrpcClient {
   public:
     GrpcClient(std::string& addr);
 
+    void Put(const std::string& key, const std::string& value);
+    void Get(const std::string& key, std::string& out_value);
+
+    void Close();
+
   private:
     std::unique_ptr<kvs::KVS::Stub> stub;
+    std::unique_ptr< ::grpc::ClientReaderWriter< ::kvs::PutRequest, ::kvs::PutResponse>> puts;
+    std::unique_ptr<::grpc::ClientContext> puts_context;
+    std::unique_ptr< ::grpc::ClientReaderWriter< ::kvs::GetRequest, ::kvs::GetResponse>> gets;
+    std::unique_ptr<::grpc::ClientContext> gets_context;
+    int nonce;
 };
 
 class GrpcDB : public DB {

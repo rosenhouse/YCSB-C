@@ -44,6 +44,7 @@ int GrpcDB::Read(const string &table,
                      const string &key,
                      const vector<string> *fields,
                      vector<KVPair> &result) {
+  this->clients_map[thread_id]->Get(key, result[0].second);
   return DB::kOK;
 }
 
@@ -66,8 +67,7 @@ int GrpcDB::Insert(const string &table, const string &key, vector<KVPair> &value
   assert(values.size() == 1);
 
   std::string val = values[0].second;
-  // slice key_slice = slice_create(key.size(), key.c_str());
-  // slice val_slice = slice_create(val.size(), val.c_str());
+  this->clients_map[thread_id]->Put(key, val);
 
   return DB::kOK;
 }
@@ -81,6 +81,68 @@ int GrpcDB::Delete(const string &table, const string &key) {
 GrpcClient::GrpcClient(std::string& addr) {
     auto channel = grpc::CreateChannel(addr, grpc::InsecureChannelCredentials());
     this->stub = kvs::KVS::NewStub(channel);
+    this->puts_context = std::unique_ptr<grpc::ClientContext>(new grpc::ClientContext());
+    this->puts = this->stub->Put(puts_context.get());
+    this->gets_context = std::unique_ptr<grpc::ClientContext>(new grpc::ClientContext());
+    this->gets = this->stub->Get(gets_context.get());
+}
+
+void GrpcClient::Close() {
+  this->puts->WritesDone();
+  this->puts->Finish();
+  this->puts_context->TryCancel();
+  this->gets->WritesDone();
+  this->gets->Finish();
+  this->gets_context->TryCancel();
+}
+
+void GrpcClient::Get(const std::string& key, std::string& out_value) {
+  kvs::GetRequest req;
+  req.set_key(key);
+  req.set_nonce(this->nonce++);
+  bool success = this->gets->Write(req);
+  if (!success) {
+    auto status = this->gets->Finish();
+    assert(!status.ok()); // we only got here because of a write failure!
+    std::cerr << "sending a get request failed:" << std::endl;
+    std::cerr << status.error_message() << std::endl;
+    assert(false);
+  }
+
+  kvs::GetResponse resp;
+  success = this->gets->Read(&resp);
+  if (!success) {
+    auto status = this->gets->Finish();
+    assert(!status.ok()); // we only got here because of a read failure!
+    std::cerr << "receiving the get confirmation failed:" << std::endl;
+    std::cerr << status.error_message() << std::endl;
+    assert(false);
+  }
+}
+
+void GrpcClient::Put(const std::string& key, const std::string& value) {
+  kvs::PutRequest req;
+  req.set_key(key);
+  req.set_value(value);
+  req.set_nonce(this->nonce++);
+  bool success = this->puts->Write(req);
+  if (!success) {
+    auto status = this->puts->Finish();
+    assert(!status.ok()); // we only got here because of a write failure!
+    std::cerr << "sending a put request failed:" << std::endl;
+    std::cerr << status.error_message() << std::endl;
+    assert(false);
+  }
+
+  kvs::PutResponse resp;
+  success = this->puts->Read(&resp);
+  if (!success) {
+    auto status = this->puts->Finish();
+    assert(!status.ok()); // we only got here because of a read failure!
+    std::cerr << "receiving the put confirmation failed:" << std::endl;
+    std::cerr << status.error_message() << std::endl;
+    assert(false);
+  }
 }
 
 } // ycsbc
